@@ -99,9 +99,9 @@ int data =0;
 
 void setup() {
  // Set up interrupt pins as inputs:
-  pinMode(INT1XM, INPUT);
-  pinMode(INT2XM, INPUT);
-  pinMode(DRDYG,  INPUT);  
+  pinMode(INT1XM, INPUT_PULLUP);
+  pinMode(INT2XM, INPUT_PULLUP);
+  pinMode(DRDYG,  INPUT_PULLUP);  
   // begin() returns a 16-bit value which includes both the gyro 
   // and accelerometers WHO_AM_I response. You can check this to
   // make sure communication was successful.
@@ -145,15 +145,16 @@ SoftwareUart.println("Should be 0x49D4");
  // Use the FIFO mode to average accelerometer and gyro readings to calculate the biases, which can then be removed from
  // all subsequent measurements.
     dof.calLSM9DS0(gbias, abias);
-
+    dof.calLSM9DS0(gbias, abias);// Don't known why but end up with xgyro bias of about 20 deg/s
  // Setup EV3 Protocol   
 
 IMU.begin(); // Start EV3 Sensor Type 31 Baud Rate 57600
-IMU.Add_Mode("Pitch Rol",true,2,DATA8,3,2);//0
-IMU.Add_Mode("Heading",true,1,DATA8,3,2);//1
+IMU.Add_Mode("Pitch Rol",true,2,DATA8,3,2,-90,90,"Deg");//0
+/*IMU.Add_Mode("Heading",true,1,DATA8,3,2);//1
 IMU.Add_Mode("Gyro Rate",true,4,DATA8,3,2);//2
 IMU.Add_Mode("Accelerom",true,4,DATA8,3,2);//3
 IMU.Add_Mode("Magnetome",true,4,DATA8,3,2);//4
+*/
 IMU.Send_Info();
 
 }
@@ -254,31 +255,36 @@ IMU.Send_Info();
 
 
 void loop() {
-  if(digitalRead(DRDYG==0)) {  // When new gyro data is ready
+ 
+ // if((digitalRead(DRDYG)) == LOW) 
+ if (bitRead(3,(dof.gReadByte(STATUS_REG_G)))==HIGH)  {  // When new gyro data is ready
     dof.readGyro();           // Read raw gyro data
+  
     gx = dof.calcGyro(dof.gx) - gbias[0];   // Convert to degrees per seconds, remove gyro biases
     gy = dof.calcGyro(dof.gy) - gbias[1];
     gz = dof.calcGyro(dof.gz) - gbias[2];
-  }
+ }
   
-  if(digitalRead(INT1XM==0)) {  // When new accelerometer data is ready
+ // if((digitalRead(INT1XM)) == LOW) 
+ if (bitRead(3,(dof.xmReadByte(STATUS_REG_A)))==HIGH) {  // When new accelerometer data is ready
     dof.readAccel();         // Read raw accelerometer data
     ax = dof.calcAccel(dof.ax) - abias[0];   // Convert to g's, remove accelerometer biases
     ay = dof.calcAccel(dof.ay) - abias[1];
-    az = dof.calcAccel(dof.az) - abias[2]; 
+    az = dof.calcAccel(dof.az) - abias[2];
+
   }
   
-  if(digitalRead(INT2XM==0)) {  // When new magnetometer data is ready
+ // if((digitalRead(INT2XM)) == LOW) 
+ if (bitRead(3,(dof.xmReadByte(STATUS_REG_M)))==HIGH) {  // When new magnetometer data is ready
     dof.readMag();           // Read raw magnetometer data
     mx = dof.calcMag(dof.mx);     // Convert to Gauss and correct for calibration
     my = dof.calcMag(dof.my);
     mz = dof.calcMag(dof.mz);
     
     dof.readTemp();
-    temperature = 21.0 + (float) dof.temperature/8.; // slope is 8 LSB per degree C, just guessing at the intercept  
-     #ifdef verbose
-    SoftwareUart.println("Magnetometer Update"); 
-    #endif 
+    temperature = 21.0 + (float) dof.temperature/8.; // slope is 8 LSB per degree C, just guessing at the intercept
+   
+
   }
 
   Now = micros();

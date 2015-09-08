@@ -31,6 +31,10 @@ class EV3_Mode {
   byte Data_Type;
   byte Figures_Count;
   byte  Decimal_Places;
+  //SI        10011MMM  00000011  llllllll  llllllll  llllllll  llllllll  hhhhhhhh  hhhhhhhh  hhhhhhhh  hhhhhhhh  cccccccc    SI unit value span in mode MMM
+  long  SI_low,SI_high;
+  //SYMBOL    10011MMM  00000100  aaaaaaaa  aaaaaaaa  aaaaaaaa  aaaaaaaa  aaaaaaaa  aaaaaaaa  aaaaaaaa  aaaaaaaa  cccccccc    SI symbol
+  String Symbol;
   private:
  
   
@@ -43,7 +47,7 @@ class EV3_Sensor{
     
       void begin();
       void end();
-      void Add_Mode(String Name, boolean Viewable,byte Data_Packets,byte Data_Type, byte Data_Count, byte Decimal_Places);
+      void Add_Mode(String Name, boolean Viewable,byte Data_Packets,byte Data_Type, byte Data_Count, byte Decimal_Places,float SI_low,float SI_high,String Symbol);
       void Send_Info();
       void watch_dog();
       byte get_Selected_Mode();

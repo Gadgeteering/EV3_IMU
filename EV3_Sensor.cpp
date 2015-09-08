@@ -47,7 +47,7 @@ void EV3_Sensor::end() {
   Serial.end();
 }
 
-void EV3_Sensor::Add_Mode(String Name, boolean Viewable,byte Data_Packets,byte Data_Type, byte Figures_Count, byte Decimal_Places)
+void EV3_Sensor::Add_Mode(String Name, boolean Viewable,byte Data_Packets,byte Data_Type, byte Figures_Count, byte Decimal_Places,float SI_low,float SI_high,String Symbol)
   {
   EV3_Mode* Mode = new EV3_Mode();
   Mode->Name = Name;
@@ -55,6 +55,9 @@ void EV3_Sensor::Add_Mode(String Name, boolean Viewable,byte Data_Packets,byte D
   Mode->Data_Type=Data_Type;
   Mode->Figures_Count=Figures_Count;
   Mode->Decimal_Places;
+  Mode->SI_low =SI_low;
+  Mode->SI_high=SI_high;
+  Mode->Symbol=Symbol;
   Sensor_Info_Array[iii] = Mode;
   iii++;
   if (Viewable) jjj++;
@@ -87,7 +90,7 @@ boolean ACK_RX = false;
     Send_CMD(MESSAGE_CMD |CMD_MODES, Bytes, 2); //LL =1 2bytes
     //Convert Baud to Bytes
     unsigned long Baud_rate =  SELECTED_BAUD;
-    Baud_Bytes[0] = 0;
+    Baud_Bytes[0] = 0; //(byte) (Baud_rate);
     Baud_Bytes[1] = (byte) (Baud_rate >> 8);
     Baud_Bytes[2] = (byte) (Baud_rate >> 16);
     Baud_Bytes[3] = (byte) (Baud_rate>> 24);
@@ -105,6 +108,29 @@ boolean ACK_RX = false;
     //10LLLMMM  INFO    - Info message (next byte is command)
     //  MAKE_CMD_COMMAND(C,LC)        (MESSAGE_CMD + (C & 0x07) + ((LC & 0x07) << 3))
     Send_CMD(MESSAGE_INFO  | MMM, Payload, len);// add One for definition
+    //Send SI Range
+    byte SI_Payload[9];
+    SI_Payload[0]=INFO_SI;
+    long low = Mode->SI_low;
+    SI_Payload[1] = (byte) low & 0xff;
+    SI_Payload[2] = (byte) (low >> 8);
+    SI_Payload[3] = (byte) (low >> 16);
+    SI_Payload[4] = (byte) (low >> 24);
+    long high = Mode->SI_high;
+    SI_Payload[5] = (byte) high & 0xff;
+    SI_Payload[6] = (byte) (high >> 8);
+    SI_Payload[7] = (byte) (high >> 16);
+    SI_Payload[8] = (byte) (high >> 24);
+    Send_CMD(MESSAGE_INFO | MMM, SI_Payload, 8);
+    //Send Symbol
+    byte Symbol_Payload[]= {0,0,0,0,0,0,0,0,0};
+    Symbol_Payload[0] = INFO_SYMBOL;
+    byte len_symbol = Mode->Symbol.length();    
+    if (len_symbol>8) len_symbol=8;
+    Mode->Symbol.getBytes(&Symbol_Payload[1],len_symbol+1);
+    Send_CMD(MESSAGE_INFO  | MMM, Symbol_Payload, 8);
+    
+    
     //Send FORMAT of Number 
     byte Format_Payload[5];
     Format_Payload[0] = INFO_FORMAT;

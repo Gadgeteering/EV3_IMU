@@ -3,7 +3,7 @@
 #define   LOWEST_BITRATE                2400  //  Lowest possible bit rate (always used for sync and info)  [b/S]
 #define   MIDDLE_BITRATE                57600  //  Highest bit rate allowed when adjusting clock             [b/S]
 #define   HIGHEST_BITRATE             460800  //  Highest possible bit rate                                 [b/S]
-#define   SELECTED_BAUD              MIDDLE_BITRATE
+#define   SELECTED_BAUD              HIGHEST_BITRATE
 #define   SENSOR_TYPE                 31 // IMU
 #define   Timeout_ACK                   2000//ms
 /*
