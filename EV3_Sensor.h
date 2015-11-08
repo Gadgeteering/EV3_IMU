@@ -27,7 +27,7 @@ class EV3_Mode {
   public:
   EV3_Mode();
   String Name;
-  byte Data_Packets;
+  byte DataSets;
   byte Data_Type;
   byte Figures_Count;
   byte  Decimal_Places;
@@ -47,13 +47,13 @@ class EV3_Sensor{
     
       void begin();
       void end();
-      void Add_Mode(String Name, boolean Viewable,byte Data_Packets,byte Data_Type, byte Data_Count, byte Decimal_Places,float SI_low,float SI_high,String Symbol);
+      void Add_Mode(String Name, boolean Viewable,byte DataSets,byte Data_Type, byte Data_Count, byte Decimal_Places,float SI_low,float SI_high,String Symbol);
       void Send_Info();
       void watch_dog();
       byte get_Selected_Mode();
       unsigned long get_Last_Response();
-      
-      void Send_DATA(byte Mode,int* payload);
+      boolean get_Data_Read();
+      void Send_DATA(byte Mode,long* payload);
       
    //Values
       unsigned long last_response;
@@ -67,6 +67,7 @@ class EV3_Sensor{
     byte jjj;
     void Send_CMD( byte CMD,byte* DATA,byte LEN);
     byte Pow2(byte LLL);
+    boolean Data_Read;
 };
 
 

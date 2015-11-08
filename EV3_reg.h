@@ -3,11 +3,249 @@
 #define   LOWEST_BITRATE                2400  //  Lowest possible bit rate (always used for sync and info)  [b/S]
 #define   MIDDLE_BITRATE                57600  //  Highest bit rate allowed when adjusting clock             [b/S]
 #define   HIGHEST_BITRATE             460800  //  Highest possible bit rate                                 [b/S]
-#define   SELECTED_BAUD              HIGHEST_BITRATE
+#define   SELECTED_BAUD              MIDDLE_BITRATE
+/* Type No     Description
+    --------    ----------------------------------------------------
+    0           "Don't change type" type
+    1..50       Reserved for LEGO existing and future devices
+    51..100     Free to 3th. party devices
+    101..127    Reserved for internal use
+*/
 #define   SENSOR_TYPE                 31 // IMU
 #define   Timeout_ACK                   2000//ms
 /*
-  SEQUENCE WHEN UART DEVICE IS DETECTED
+ * 
+ * //                DEVICE MAPPING
+//
+// Device         0   1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30  31
+//
+// Layer          0   0   0   0   1   1   1   1   2   2   2   2   3   3   3   3   0   0   0   0   1   1   1   1   2   2   2   2   3   3   3   3
+// Port (INPUT)   0   1   2   3   0   1   2   3   0   1   2   3   0   1   2   3   16  17  18  19  16  17  18  19  16  17  18  19  16  17  18  19
+// Port (OUTPUT)  -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   0   1   2   3   0   1   2   3   0   1   2   3   0   1   2   3
+// Output         0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1
+
+ */
+ /*! \page cInput
+ *  <hr size="1"/>
+ *  <b>     opINPUT_DEVICE (CMD, .....)  </b>
+ *
+ *- Read information about device\n
+ *- Dispatch status unchanged
+ *
+ *  \param  (DATA8)   CMD               - \ref inputdevicesubcode
+ *
+ *\n
+ *  - CMD = GET_TYPEMODE
+ *\n  Get device type and mode\n
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *    -  \return (DATA8) \ref types "TYPE" - Device type
+ *    -  \return (DATA8)   MODE         - Device mode [0..7]
+ *
+ *\n
+ *  - CMD = GET_NAME
+ *\n  Get device name\n
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *    -  \param  (DATA8)   LENGTH       - Maximal length of string returned (-1 = no check)\n
+ *    -  \return (DATA8)   DESTINATION  - String variable or handle to string\n
+ *
+ *\n
+ *  - CMD = GET_SYMBOL
+ *\n  Get device symbol\n
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *    -  \param  (DATA8)   LENGTH       - Maximal length of string returned (-1 = no check)\n
+ *    -  \return (DATA8)   DESTINATION  - String variable or handle to string\n
+ *
+ *\n
+ *  - CMD = GET_FORMAT
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *    -  \return (DATA8)   DATASETS     - Number of data sets\n
+ *    -  \return (DATA8)   FORMAT       - Format [0..3]\n
+ *    -  \return (DATA8)   MODES        - Number of modes [1..8]\n
+ *    -  \return (DATA8)   VIEWS        - Number of views [1..8]\n
+ *
+ *\n
+ *  - CMD = GET_RAW
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *    -  \return (DATA32)  VALUE        - 32 bit raw value\n
+ *
+ *\n
+ *  - CMD = GET_MODENAME
+ *\n  Get device mode name\n
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *    -  \param  (DATA8)   MODE         - Mode\n
+ *    -  \param  (DATA8)   LENGTH       - Maximal length of string returned (-1 = no check)\n
+ *    -  \return (DATA8)   DESTINATION  - String variable or handle to string\n
+ *
+ *\n
+ *  - CMD = GET_FIGURES
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *    -  \return (DATA8)   FIGURES      - Total number of figures (inclusive decimal point and decimals\n
+ *    -  \return (DATA8)   DECIMALS     - Number of decimals\n
+ *
+ *\n
+ *  - CMD = GET_MINMAX
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *    -  \return (DATAF)   MIN          - Min SI value\n
+ *    -  \return (DATAF)   MAX          - Max SI value\n
+ *
+ *\n
+ *  - CMD = READY_PCT
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *    -  \param  (DATA8) \ref types "TYPE" - Device type (0 = don't change type)
+ *    -  \param  (DATA8)   MODE         - Device mode [0..7] (-1 = don't change mode)
+ *    -  \param  (DATA8)   VALUES       - Number of return values
+ *
+ *       if (VALUES == 1)
+ *       \return (DATA8)   VALUE1       - First value from input
+ *
+ *\n
+ *  - CMD = READY_RAW
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *    -  \param  (DATA8) \ref types "TYPE" - Device type (0 = don't change type)
+ *    -  \param  (DATA8)   MODE         - Device mode [0..7] (-1 = don't change mode)
+ *    -  \param  (DATA8)   VALUES       - Number of return values
+ *
+ *       if (VALUES == 1)
+ *       \return (DATA32)  VALUE1       - First value from input
+ *
+ *\n
+ *  - CMD = READY_SI
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *    -  \param  (DATA8) \ref types "TYPE" - Device type (0 = don't change type)
+ *    -  \param  (DATA8)   MODE         - Device mode [0..7] (-1 = don't change mode)
+ *    -  \param  (DATA8)   VALUES       - Number of return values
+ *
+ *       if (VALUES == 1)
+ *       \return (DATAF)   VALUE1       - First value from input
+ *
+ *\n
+ *  - CMD = GET_CHANGES
+ *\n  Get positive changes since last clear\n
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *    -  \return (DATAF)   VALUE        - Positive changes since last clear\n
+ *
+ *\n
+ *  - CMD = GET_BUMPS
+ *\n  Get negative changes since last clear\n
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *    -  \return (DATAF)   VALUE        - Negative changes since last clear\n
+ *
+ *\n
+ *  - CMD = CLR_CHANGES
+ *\n  Clear changes and bumps\n
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *
+ *\n
+ *  - CMD = CAL_MINMAX
+ *\n  Apply new minimum and maximum raw value for device type to be used in scaling PCT and SI\n
+ *    -  \param  (DATA8) \ref types "TYPE" - Device type [1..101]
+ *    -  \param  (DATA8)   MODE         - Device mode [0..7]
+ *    -  \param  (DATA32)  CAL_MIN      - 32 bit raw minimum value (Zero)\n
+ *    -  \param  (DATA32)  CAL_MAX      - 32 bit raw maximum value (Full scale)\n
+ *
+ *\n
+ *  - CMD = CAL_MIN
+ *\n  Apply new minimum raw value for device type to be used in scaling PCT and SI\n
+ *    -  \param  (DATA8) \ref types "TYPE" - Device type [1..101]
+ *    -  \param  (DATA8)   MODE         - Device mode [0..7]
+ *    -  \param  (DATA32)  CAL_MIN      - 32 bit SI minimum value (Zero)\n
+ *
+ *\n
+ *  - CMD = CAL_MAX
+ *\n  Apply new maximum raw value for device type to be used in scaling PCT and SI\n
+ *    -  \param  (DATA8) \ref types "TYPE" - Device type [1..101]
+ *    -  \param  (DATA8)   MODE         - Device mode [0..7]
+ *    -  \param  (DATA32)  CAL_MAX      - 32 bit SI maximum value (Full scale)\n
+ *
+ *\n
+ *  - CMD = CAL_DEFAULT
+ *\n  Apply the default minimum and maximum raw value for device type to be used in scaling PCT and SI\n
+ *    -  \param  (DATA8) \ref types "TYPE" - Device type [1..101]
+ *    -  \param  (DATA8)   MODE         - Device mode [0..7]
+ *
+ *\n
+ *  - CMD = SETUP
+ *\n  Generic setup/read IIC sensors \ref cinputdevicesetup "Example"\n
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *    -  \param  (DATA8)   REPEAT       - Repeat setup/read "REPEAT" times  (0 = infinite)
+ *    -  \param  (DATA16)  TIME         - Time between repeats [10..1000mS] (0 = 10)
+ *    -  \param  (DATA8)   WRLNG        - No of bytes to write
+ *    -  \param  (DATA8)   WRDATA       - DATA8 array  (handle) of data to write\n
+ *    -  \param  (DATA8)   RDLNG        - No of bytes to read
+ *    -  \return (DATA8)   RDDATA       - DATA8 array  (handle) to read into\n
+ *
+ *\n
+ *  - CMD = CLR_ALL
+ *\n  Clear all devices (e.c. counters, angle, ...)\n
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3] (-1 = all)
+ *
+ *\n
+ *  - CMD = STOP_ALL
+ *\n  Stop all devices (e.c. motors, ...)\n
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3] (-1 = all)
+ *
+ *\n
+ *
+ */
+/*! \brief  opINPUT_DEVICE byte code
+ *
+ */
+/*! \page cInput
+ *  <hr size="1"/>
+ *  <b>     opINPUT_READEXT (LAYER, NO, TYPE, MODE, FORMAT, VALUES, VALUE1)  </b>
+ *
+ *- Read device value\n
+ *- Dispatch status unchanged
+ *
+ *  \param  (DATA8)   LAYER   - Chain layer number [0..3]
+ *  \param  (DATA8)   NO      - Port number
+ *  \param  (DATA8) \ref types "TYPE" - Device type (0 = don't change type)
+ *  \param  (DATA8)   MODE    - Device mode [0..7] (-1 = don't change mode)
+ *  \param  (DATA8) \ref formats "FORMAT"  - Format (PCT, RAW, SI ...)
+ *  \param  (DATA8)   VALUES  - Number of return values
+ *
+ *  if (VALUES == 1)
+ *  \return (FORMAT)  VALUE1  - First value from device
+ */
+/*! \brief  opINPUT_READEXT byte code
+ *
+ */
+ /*! \page cInput
+ *  <hr size="1"/>
+ *  <b>     opINPUT_SAMPLE (TIME, SAMPLES, INIT, DEVICES, TYPES, MODES, DATASETS, VALUES)  </b>
+ *
+ *- Sample devices (see \ref cinputsample "Example")\n
+ *- Dispatch status unchanged
+ *
+ *  \param  (DATA32)  TIME      - Sample time [mS]
+ *  \param  (DATA16)  SAMPLES   - Number of samples
+ *  \param  (DATA16)  INIT      - DATA16 array (handle) - to start/reset buffer -> fill array with -1 otherwise don't change
+ *  \param  (DATA8)   DEVICES   - DATA8 array  (handle) with devices to sample
+ *  \param  (DATA8)   TYPES     - DATA8 array  (handle) with types
+ *  \param  (DATA8)   MODES     - DATA8 array  (handle) with modes
+ *  \param  (DATA8)   DATASETS  - DATA8 array  (handle) with data sets
+ *  \return (DATAF)   VALUES    - DATAF array  (handle) with values
+ *
+ */
+/*! \brief  opINPUT_SAMPLE byte code
+ *
+ */
+/*  SEQUENCE WHEN UART DEVICE IS DETECTED
   =====================================
 
         HOST                                                                                DEVICE
@@ -421,14 +659,45 @@
 #define   INFO_FORMAT                   0x80                            // INFO command - FORMAT  (device data sets and format)
 #define   GET_INFO_COMMAND(B)           (B)                             // Get INFO command
 
-// Data set format
+/* Data set format
 #define   DATA8                         0x00                            // DATA8 Type
 #define   DATA16                        0x01                            // DATA16
 #define   DATA32                        0x10                            // DATA32
 #define   DATAF                         0x11                            // DATAF
+*/
 
+#define   DATA8_NAN     ((DATA8)(-128))
+#define   DATA16_NAN    ((DATA16)(-32768))
+#define   DATA32_NAN    ((DATA32)(0x80000000))
+#define   DATAF_NAN     ((float)0 / (float)0) //(0x7FC00000)
 
+#define   DATA8_MIN     (-127)
+#define   DATA8_MAX     (127)
+#define   DATA16_MIN    (-32767)
+#define   DATA16_MAX    (32767)
+#define   DATA32_MIN    (-2147483647)
+#define   DATA32_MAX    (2147483647)
+#define   DATAF_MIN     (-2147483647)
+#define   DATAF_MAX     (2147483647)
 
+typedef   enum
+{
+  DATA_8        = 0x00,                 //!< DATA8  (don't change)
+  DATA_16       = 0x01,                 //!< DATA16 (don't change)
+  DATA_32       = 0x02,                 //!< DATA32 (don't change)
+  DATA_F        = 0x03,                 //!< DATAF  (don't change)
+  DATA_S        = 0x04,                 //!< Zero terminated string
+  DATA_A        = 0x05,                 //!< Array handle
+
+  DATA_V        = 0x07,                 //!< Variable type
+
+  DATA_PCT      = 0x10,                 //!< Percent (used in opINPUT_READEXT)/DATA8
+  DATA_RAW      = 0x12,                 //!< Raw     (used in opINPUT_READEXT)/DATA32 Format send
+  DATA_SI       = 0x13,                 //!< SI unit (used in opINPUT_READEXT)/ DATAF format
+
+  DATA_FORMATS
+}
+DATA_FORMAT;
 
 
 #endif
