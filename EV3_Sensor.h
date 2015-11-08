@@ -68,6 +68,7 @@ class EV3_Sensor{
     void Send_CMD( byte CMD,byte* DATA,byte LEN);
     byte Pow2(byte LLL);
     boolean Data_Read;
+    byte Response;
 };
 
 

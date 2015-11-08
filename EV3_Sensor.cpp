@@ -20,7 +20,7 @@ Distributed as-is; no warranty is given.
 #include "Arduino.h"
 #include "EV3_reg.h"
 
-//#define debugEV3
+#define debugEV3
 #ifdef debugEV3
 #define debugEV3_Level1
 #include <SoftwareSerial.h>
@@ -177,7 +177,7 @@ delay(10);
 
 void EV3_Sensor::watch_dog(){
   if (Serial.available()) {
-      byte Response = Serial.read();
+      Response = Serial.read();
 #ifdef debugEV3
    SoftwareUart.print("Response=");SoftwareUart.println(Response,HEX);
 #endif
@@ -203,7 +203,15 @@ void EV3_Sensor::watch_dog(){
     
    }
 }
+else
+{
+  Data_Read=false;
+#ifdef debugEV3_level3
+   SoftwareUart.println("No Response");
+#endif 
 }
+}
+
 
 /*! \page cInput
  *  <hr size="1"/>

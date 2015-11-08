@@ -258,10 +258,11 @@ if (millis() - IMU.get_Last_Response() > Timeout_ACK) {IMU.Send_Info();
 boolean EV3_DataRead=IMU.get_Data_Read();
 if (EV3_DataRead==true){
   
+
+byte   Mode=IMU.get_Selected_Mode();
 #ifdef SoftUart
   SoftwareUart.print("Mode="); SoftwareUart.println(Mode,DEC);
 #endif
-byte   Mode=IMU.get_Selected_Mode();
    switch(Mode){
     case 0: //Angle X & Y
     //roll=10.2323;
